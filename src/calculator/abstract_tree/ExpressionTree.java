@@ -1,7 +1,7 @@
 package calculator.abstract_tree;
 
 /**
- * 
+ *
  */
 public interface ExpressionTree {
 	

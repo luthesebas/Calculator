@@ -9,7 +9,8 @@ public enum Operator {
 	MINUS('-'),
 	MULTI('*'),
 	DIVIDE('/'),
-	MODULO('%')
+	MODULO('%'),
+	POWER('^'),
 	
 	;
 	
