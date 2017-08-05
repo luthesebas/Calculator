@@ -14,30 +14,25 @@ public class RecursiveDescentParserTest {
 
 	@Test
 	public void test() {
-		RecursiveDescentParser parser = new RecursiveDescentParser("2+(5*5)-(1*(1+0))");
-		double sol = parser.parse();
+		RecursiveDescentParser parser;
 		
-		assertEquals(26, sol, 0.01);
+		parser = new RecursiveDescentParser("2+(5*5)-(1*(1+0))");
+		double solution = parser.parse();		
+		assertEquals(26, solution, 0.01);
 		
-		parser = new RecursiveDescentParser("-5*1+0/1-0");
-		sol = parser.parse();
+		solution = parser.parse("-5*1+0/1-0");	
+		assertEquals(-5, solution, 0.01);
 		
-		assertEquals(-5, sol, 0.01);
+		parser.setExpression("5*1+cos(0)");
+		solution = parser.parse();
+		assertEquals(6, solution, 0.01);
 		
-		parser = new RecursiveDescentParser("5*1+cos(0)");
-		sol = parser.parse();
+		solution = parser.parse("2^2^2^2");
+		assertEquals(65536, solution, 0.01);
 		
-		assertEquals(6, sol, 0.01);
+		solution = parser.parse("5.11+5-5.5.");
+		assertEquals(Double.NaN, solution, 0.01);
 		
-		parser = new RecursiveDescentParser("2^2^2^2");
-		sol = parser.parse();
-		
-		assertEquals(65536, sol, 0.01);
-		
-		parser = new RecursiveDescentParser("5.11.+5");
-		sol = parser.parse();
-		
-		assertEquals(Double.NaN, sol, 0.01);
 	}
 
 }

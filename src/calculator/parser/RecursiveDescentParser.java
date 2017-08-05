@@ -5,22 +5,94 @@ package calculator.parser;
  */
 public class RecursiveDescentParser {
 
-	private final String expression;
-	private int position;
-	private char character;
+	private String expression; // expression to parse
+	private char character; // current character of the expression
+	private int position; // current position of the character
+	
+	private boolean isParsed; // indicates if the expression has been already parsed
+	private double solution; // solution of the expression
 	
 	/**
-	 * 
+	 * Constructs a recursive descent parser for arithmetic expressions
 	 */
-	public RecursiveDescentParser(String expression) {
-		this.position = -1;
-		this.character = 0;
-		// Remove all spaces and initialize expression
-		this.expression = expression.replaceAll(" ", ""); 
+	public RecursiveDescentParser() {
+		// ...
 	}
 	
 	/**
-	 * Reads the next character of the given expression.
+	 * Constructs a recursive descent parser for arithmetic expressions.
+	 * @param expression Arithmetic expression to parse
+	 */
+	public RecursiveDescentParser(String expression) {
+		init(expression);
+	}
+	
+
+    /**
+     * Parses the current expression
+     * @return
+     */
+    public double parse() {    	
+    	if (this.isParsed) {
+    		return this.solution;
+    	} else {
+    		return parse(this.expression);
+    	}
+    }
+    
+    /**
+     * Parses the given arithmetic expression.
+     * @param expression Arithmetic expression to parse
+     * @return
+     */
+    public double parse(String expression) {
+		init(expression);
+        
+		nextChar();
+        double x = parseExpression();
+
+        this.isParsed = true;
+
+        // Error?
+        if (this.position < this.expression.length()) {
+        	//throw new RuntimeException("Unexpected character '" + this.character + "' at position: " + this.position);
+        	System.out.println("Unexpected character '" + this.character + "' at position: " + this.position);
+        	return this.solution = Double.NaN;
+        }
+        
+    	return this.solution = x;
+    }
+    
+    /**
+     * Defines the new arithmetic expression to parse.
+     * @param expression Arithmetic expression
+     */
+    public void setExpression(String expression) {
+    	init(expression);
+    }
+    
+    /**
+     * Initializes the recursive descent parser.
+     * @param expression Arithmetic expression
+     */
+    private void init(String expression) {
+    	if (expression == null) {
+			//throw new RuntimeException("No arithmetic expression to parse");
+        	System.out.println("No arithmetic expression to parse");
+    		this.isParsed = true;
+    		this.expression = null;
+    	} else {
+    		this.isParsed = false;
+    		this.expression = expression.replaceAll(" ", ""); // remove all spaces and initialize expression
+		}
+    	
+		this.position = -1;
+		this.character = 0;
+		this.solution = Double.NaN;
+    }
+    
+	/**
+	 * Reads the next character of the given arithmetic expression.
 	 */
     private void nextChar() {
         if (++this.position < this.expression.length()) {
@@ -28,17 +100,6 @@ public class RecursiveDescentParser {
         } else {
         	this.character = 0;
         }
-    }
-
-    /**
-     * 
-     * @return
-     */
-    public double parse() {    	
-        nextChar();
-        double x = parseExpression();
-        if (this.position < this.expression.length()) throw new RuntimeException("Unexpected: " + (char)this.character);
-        return x;
     }
     
     /*
@@ -53,8 +114,9 @@ public class RecursiveDescentParser {
      */
 
     /**
-     * expression ::= expression "+" term | expression "-" term | term
-     * @return
+     * Parses the arithmetic expression. Grammar:
+     * <pre> expression ::= expression "+" term | expression "-" term | term </pre>
+     * @return The value of the expression or {@code Double.NaN}
      */
     private double parseExpression() {
         double x = parseTerm();
@@ -71,8 +133,9 @@ public class RecursiveDescentParser {
     }
 
     /**
-     * term ::= term "*" power | term "%" power | term "/" power | power
-     * @return
+     * Parses the term expression. Grammar:
+     * <pre> term ::= term "*" power | term "%" power | term "/" power | power </pre>
+     * @return The value of the term expression or {@code Double.NaN}
      */
     private double parseTerm() {
         double x = parsePower();
@@ -89,8 +152,9 @@ public class RecursiveDescentParser {
     }
     
     /**
-     * power ::= factor "^" power | factor
-     * @return
+     * Parses the power expression. Grammar:
+     * <pre> power ::= factor "^" power | factor </pre>
+     * @return The value of the power expression or {@code Double.NaN}
      */
     private double parsePower() {
         double x = parseFactor();
@@ -106,8 +170,9 @@ public class RecursiveDescentParser {
     }
 
     /**
-     * factor ::= "-" function | "+" function | function
-     * @return
+     * Parses the factor expression. Grammar:
+     * <pre> factor ::= "-" function | "+" function | function </pre>
+     * @return The value of the factor expression or {@code Double.NaN}
      */
     private double parseFactor() {   	
     	if (this.character == '-') { // unary minus
@@ -121,23 +186,40 @@ public class RecursiveDescentParser {
     }
     
     /**
-     * function	::= "sin" factor | "cos" factor | "tan" factor | "sqrt" factor | numeral
-     * @return
+     * Parses the function expression. Grammar:
+     * <pre> function ::= "sin" factor | "cos" factor | "tan" factor | "sqrt" factor | numeral </pre>
+     * @return The value of the function expression or {@code Double.NaN}
      */
     private double parseFunction() {
-        int startPos = this.position;   
+        double x;
+        int startPos = this.position;  
         
     	if (this.character >= 'a' && this.character <= 'z') { // functions
-            String func = readFunction(startPos);
-            return calculateFunction(func, parseFactor());
+			while (this.character >= 'a' && this.character <= 'z') { // read the function name
+				nextChar();
+			}
+			String func = this.expression.substring(startPos, this.position);
+			
+			x = parseFactor(); // calculate function input parameter
+			
+			if (func.equalsIgnoreCase("sin")) return Math.sin(Math.toRadians(x)); // sin;
+			if (func.equalsIgnoreCase("cos")) return Math.cos(Math.toRadians(x)); // cos;
+			if (func.equalsIgnoreCase("tan")) return Math.tan(Math.toRadians(x)); // tan;
+			if (func.equalsIgnoreCase("sqrt")) return Math.sqrt(x); // square root
+			else {
+				//throw new RuntimeException("Unknown function '" + func + "' at position: " + startPos);
+				System.out.println("Unknown function '" + func + "' at position: " + startPos);
+				return Double.NaN;
+			}
         } else {
         	return parseNumeral();
         }
     }
     
     /**
-     * numeral ::= "(" expression ")" | number
-     * @return
+     * Parses the numeral expression. Grammar:
+     * <pre> numeral ::= "(" expression ")" | number </pre>
+     * @return The value of the numeral expression or {@code Double.NaN}
      */
     private double parseNumeral() {  
         double x;
@@ -159,7 +241,7 @@ public class RecursiveDescentParser {
             x = readNumber(startPos);
         } else {
         	//throw new RuntimeException("Unexpected character: " + (char)this.character);
-        	System.out.println("Unexpected character: " + (char)this.character);
+        	System.out.println("Unexpected character: '" + (char)this.character + "' at position: " + this.position);
 			return Double.NaN;
         }
         
@@ -167,53 +249,26 @@ public class RecursiveDescentParser {
     } //parseFactor
     
     /**
-     * Reads the complete number
-     * @param startPos
-     * @return
+     * Reads the complete number.
+     * @param startPos Character start position of the number of the expression
+     * @return The value of number or {@code Double.NaN}
      */
     private double readNumber(int startPos) {
         while ((this.character >= '0' && this.character <= '9') || this.character == '.') { // read full number
         	nextChar();
         }
         
+    	String num = this.expression.substring(startPos, this.position);
         try {
-        	return Double.parseDouble(this.expression.substring(startPos, this.position));
+        	return Double.parseDouble(num);
         } catch (NumberFormatException e) {
+			//throw new RuntimeException("Invalid number '" + num + "' at position: " + startPos);
+			System.out.println("Invalid number '" + num + "' at position: " + startPos);
         	return Double.NaN;
         }
     }
-	
-    /**
-     * Reads the function name
-     * @param startPos
-     * @return
-     */
-    private String readFunction(int startPos) {
-        while (this.character >= 'a' && this.character <= 'z') {
-        	nextChar();
-        }
-       return this.expression.substring(startPos, this.position);
-    }
     
-    /**
-     * Calculate the function with input parameter
-     * @param func
-     * @param x
-     * @return
-     */
-    private double calculateFunction(String func, double x) {
-		if (func.equalsIgnoreCase("sin")) return Math.sin(Math.toRadians(x)); // sin;
-		if (func.equalsIgnoreCase("cos")) return Math.cos(Math.toRadians(x)); // cos;
-		if (func.equalsIgnoreCase("tan")) return Math.tan(Math.toRadians(x)); // tan;
-		if (func.equalsIgnoreCase("sqrt")) return Math.sqrt(x); // square root
-		else {
-			//throw new RuntimeException("Unknown function: " + func);
-			System.out.println("Unknown function: " + func);
-			return Double.NaN;
-		}
-    }
-
-    
+   
     
 }
 
