@@ -10,7 +10,7 @@ import calculator.abstract_tree.unary.*;
 /**
  * 
  */
-public class AbstractTreeTest {
+public class ExpressionTreeTest {
 
 	@Test
 	public void test() {
