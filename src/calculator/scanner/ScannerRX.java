@@ -5,10 +5,6 @@ package calculator.scanner;
 
 import java.util.Arrays;
 
-import calculator.parser.token.Number;
-import calculator.parser.token.Token;
-import calculator.parser.token.TokenID;
-
 /**
  * 
  */

@@ -1,8 +1,8 @@
 package calculator.parser;
 
-import calculator.parser.token.Token;
-import calculator.parser.token.TokenID;
 import calculator.scanner.ScannerRX;
+import calculator.scanner.Token;
+import calculator.scanner.TokenID;
 
 /**
  *

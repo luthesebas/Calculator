@@ -1,7 +1,7 @@
 /**
  * 
  */
-package calculator.parser.token;
+package calculator.scanner;
 
 /**
  * 
