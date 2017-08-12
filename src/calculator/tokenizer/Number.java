@@ -1,7 +1,7 @@
 /**
  * 
  */
-package calculator.scanner;
+package calculator.tokenizer;
 
 /**
  * 
@@ -11,11 +11,11 @@ public class Number extends Token {
 	private double value;
 	
 	/**
-	 * @param id
+	 * @param ID
 	 * @param position
 	 */
-	public Number(int position, String value) {
-		super(position, TokenID.NUMBER, value);
+	public Number(String value, int position) {
+		super(TokenID.NUMBER, value, position);
 		try {
 			this.value = Double.parseDouble(value);
 		} catch (NumberFormatException e) {
@@ -36,7 +36,7 @@ public class Number extends Token {
 	 */
 	@Override
 	public String toString() {
-		return String.format("Token[id=%s, name=%s, pos=%s, value=%s]", this.id.ordinal(), this.id, this.position, this.value);
+		return String.format("Token[id=%s, name=%s, pos=%s, value=%s]", this.ID.ordinal(), this.ID, this.POSITION, this.value);
 	}
 
 }
