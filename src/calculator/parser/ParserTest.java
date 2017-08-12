@@ -22,8 +22,9 @@ public class ParserTest {
 		assertTrue(parser.parse("4*5/(1+3)"));
 
 		assertFalse(parser.parse("4*5/(1+3"));
+		System.out.println(parser.getError());
 		assertFalse(parser.parse("4*5/(1+3)+"));
-
+		System.out.println(parser.getError());
 	}
 
 }

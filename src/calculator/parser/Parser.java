@@ -1,39 +1,18 @@
 package calculator.parser;
 
-import calculator.scanner.ScannerRX;
-import calculator.scanner.Token;
-import calculator.scanner.TokenID;
+import calculator.tokenizer.Token;
+import calculator.tokenizer.TokenID;
+import calculator.tokenizer.Tokenzier;
 
 /**
  *
  */
 public class Parser {
 	
-	private static final String FF_EXPRESSION   = "(i";
-	private static final String FF_EXPRESSION_1 = "+";
-	private static final String FF_EXPRESSION_2 = "-";
-	private static final String FF_EXPRESSION_3 = "#)";
-	
-	private static final String FF_TERM   = "(i";
-	private static final String FF_TERM_1 = "*";
-	private static final String FF_TERM_2 = "/";
-	private static final String FF_TERM_3 = "%";
-	private static final String FF_TERM_4 = "#)+-";
-	
-	private static final String FF_POWER   = "(i";
-	private static final String FF_POWER_1 = "^";
-	private static final String FF_POWER_2 = "#)(i+-*/%";
-	
-	private static final String FF_FACTOR   = "(i";
-	private static final String FF_FACTOR_1 = "+";
-	private static final String FF_FACTOR_2 = "-";
-	private static final String FF_FACTOR_3 = "#)(i*/%^";
-	
-	private static final String FF_NUMERAL   = "(";
-	private static final String FF_NUMERAL_1 = "i";
-	
-	private ScannerRX scanner;
+	private Tokenzier scanner;
 	private Token currentToken;
+	private String expression;
+	private String error;
 	
 	/**
 	 * Verifies a arithmetic expression
@@ -47,12 +26,14 @@ public class Parser {
 	 * @param expression
 	 */
 	public boolean parse(String expression) {
-		this.scanner = new ScannerRX(expression);
+		this.expression = expression;
+		this.scanner = new Tokenzier(expression);
 		this.currentToken = this.scanner.getToken();
 		
 		if ( f_expression() && f_EndOfExpression() ) {
 			return true;
 		} else {
+	    	// Syntax error
 			return false;
 		}
 	}
@@ -67,19 +48,17 @@ public class Parser {
      */
     private boolean f_expression() {
     	// expression ::= term expressionF    	
-    	if (Token.isFirstFollow(this.currentToken, FF_EXPRESSION)) {
-    		System.out.println("E -> T e");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.E_1)) {
+    		//System.out.println("E -> T e");
     		return f_term() && f_expressionF();
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s' ; Actual: '%s'", 
-    			"E", 
-    			FF_EXPRESSION, 
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, FirstFollow.E_1, 
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -89,33 +68,30 @@ public class Parser {
      */
     private boolean f_expressionF() {
     	// expressionF ::= "+" term expressionF
-    	if (Token.isFirstFollow(this.currentToken, FF_EXPRESSION_1)) {
-    		System.out.println("e -> + T e");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.E_2)) {
+    		//System.out.println("e -> + T e");
     		return f_tPlus() && f_term() && f_expressionF();
     	}
     	
     	// expressionF ::= "-" term expressionF
-    	if (Token.isFirstFollow(this.currentToken, FF_EXPRESSION_2)) {
-    		System.out.println("e -> - T e");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.E_3)) {
+    		//System.out.println("e -> - T e");
     		return f_tMinus() && f_term() && f_expressionF();
     	}
     	
     	// expressionF ::= epsilon    	
-    	if (Token.isFirstFollow(this.currentToken, FF_EXPRESSION_3)) {
-    		System.out.println("e -> .");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.E_4)) {
+    		//System.out.println("e -> .");
     		return true;
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s%s%s' ; Actual: '%s'", 
-    			"e", 
-    			FF_EXPRESSION_1, 
-    			FF_EXPRESSION_2, 
-    			FF_EXPRESSION_3, 
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s%s%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, 
+    			FirstFollow.E_2, FirstFollow.E_3, FirstFollow.E_4, 
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);	
     	return false;
     }
     
@@ -125,19 +101,17 @@ public class Parser {
      */
     private boolean f_term() {
     	// term ::= power termF
-    	if (Token.isFirstFollow(this.currentToken, FF_TERM)) {
-    		System.out.println("T -> P t");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.T_1)) {
+    		//System.out.println("T -> P t");
     		return f_power() && f_termF();
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s' ; Actual: '%s'", 
-    			"T", 
-    			FF_TERM, 
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, FirstFollow.T_1, 
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -147,40 +121,36 @@ public class Parser {
      */
     private boolean f_termF() {    	
     	// termF ::= "*" power termF    	
-    	if (Token.isFirstFollow(this.currentToken, FF_TERM_1)) {
-    		System.out.println("t -> * P t");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.T_2)) {
+    		//System.out.println("t -> * P t");
     		return f_tMultiply() && f_power() && f_termF();
     	}
     	
     	// termF ::= "/" power termF    	
-    	if (Token.isFirstFollow(this.currentToken, FF_TERM_2)) {
-    		System.out.println("t -> / P t");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.T_3)) {
+    		//System.out.println("t -> / P t");
     		return f_tDivide() && f_power() && f_termF();
     	}
     	
     	// termF ::= "%" power termF    	
-    	if (Token.isFirstFollow(this.currentToken, FF_TERM_3)) {
-        	System.out.println("t -> % P t");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.T_4)) {
+        	//System.out.println("t -> % P t");
     		return f_tModulo() && f_power() && f_termF();
     	}
 
     	// termF ::= epsilon
-    	if (Token.isFirstFollow(this.currentToken, FF_TERM_4)) {
-        	System.out.println("t -> .");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.T_5)) {
+        	//System.out.println("t -> .");
     		return true;
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s%s%s%s' ; Actual: '%s'", 
-    			"t", 
-    			FF_TERM_1,
-    			FF_TERM_2,
-    			FF_TERM_3,
-    			FF_TERM_4,
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s%s%s%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, 
+    			FirstFollow.T_2, FirstFollow.T_3, FirstFollow.T_4, FirstFollow.T_5,
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -190,19 +160,17 @@ public class Parser {
      */
     private boolean f_power() {
     	// power ::= factor powerF
-    	if (Token.isFirstFollow(this.currentToken, FF_POWER)) {
-        	System.out.println("P -> F p");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.P_1)) {
+        	//System.out.println("P -> F p");
     		return f_factor() && f_powerF();
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s' ; Actual: '%s'", 
-    			"P", 
-    			FF_POWER, 
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, FirstFollow.P_1, 
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -212,26 +180,23 @@ public class Parser {
      */
     private boolean f_powerF() {
     	// powerF ::= "^" powerF factor
-    	if (Token.isFirstFollow(this.currentToken, FF_POWER_1)) {
-        	System.out.println("p -> ^ p F");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.P_2)) {
+        	//System.out.println("p -> ^ p F");
     		return f_tPower() && f_powerF() && f_factor();
     	}
     	
     	// powerF ::= epsilon
-    	if (Token.isFirstFollow(this.currentToken, FF_POWER_2)) {
-        	System.out.println("p -> .");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.P_3)) {
+        	//System.out.println("p -> .");
     		return true;
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s%s' ; Actual: '%s'", 
-    			"p", 
-    			FF_POWER_1,
-    			FF_POWER_2,
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, FirstFollow.P_2, FirstFollow.P_3,
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -241,19 +206,17 @@ public class Parser {
      */
     private boolean f_factor() {
     	// factor ::= numeral factorF
-    	if (Token.isFirstFollow(this.currentToken, FF_FACTOR)) {
-        	System.out.println("F -> N f");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.F_1)) {
+        	//System.out.println("F -> N f");
     		return f_numeral() && f_factorF();
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s' ; Actual: '%s'", 
-    			"F", 
-    			FF_FACTOR, 
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, FirstFollow.F_1, 
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -263,33 +226,30 @@ public class Parser {
      */
     private boolean f_factorF() {
     	// factorF ::= "+" numeral
-    	if (Token.isFirstFollow(this.currentToken, FF_FACTOR_1)) {
-        	System.out.println("f -> + N");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.F_2)) {
+        	//System.out.println("f -> + N");
     		return f_tPlus() && f_numeral();
     	}
     	
     	// factorF ::= "-" numeral
-    	if (Token.isFirstFollow(this.currentToken, FF_FACTOR_2)) {
-        	System.out.println("f -> - N");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.F_3)) {
+        	//System.out.println("f -> - N");
     		return f_tMinus() && f_numeral();
     	}
     	
     	// factorF ::= epsilon
-    	if (Token.isFirstFollow(this.currentToken, FF_FACTOR_3)) {
-        	System.out.println("f -> .");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.F_4)) {
+        	//System.out.println("f -> .");
     		return true;
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s%s%s' ; Actual: '%s'", 
-    			"f", 
-    			FF_FACTOR_1,
-    			FF_FACTOR_2,
-    			FF_FACTOR_3,
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s%s%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, 
+    			FirstFollow.F_2, FirstFollow.F_3, FirstFollow.F_4,
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -299,26 +259,23 @@ public class Parser {
      */
     private boolean f_numeral() {
     	// numeral ::= "(" expression ")"
-    	if (Token.isFirstFollow(this.currentToken, FF_NUMERAL)) {
-        	System.out.println("N -> (E)");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.N_1)) {
+        	//System.out.println("N -> (E)");
     		return f_tLeftParenthesis() && f_expression() && f_tRightParenthesis();
     	}
     	
     	// numeral ::= number
-    	if (Token.isFirstFollow(this.currentToken, FF_NUMERAL_1)) {
-        	System.out.println("N -> i");
+    	if (this.currentToken.isFirstFollowOf(FirstFollow.N_2)) {
+        	//System.out.println("N -> i");
     		return f_number();
     	}
     	
     	// Syntax error
-    	String error = String.format(
-    			"Parsing: %s ; Expected: '%s%s' ; Actual: '%s'", 
-    			"E", 
-    			FF_NUMERAL,
-    			FF_NUMERAL_1,
-    			this.currentToken.name
+		this.error = String.format(
+    			"Error while parsing '%s' at position %s: Expected a character of the following set '%s%s'. Actual character is '%s'.", 
+    			this.expression, this.currentToken.POSITION, FirstFollow.N_1, FirstFollow.N_2,
+    			this.currentToken.VALUE
     		);
-    	System.out.println(error);
     	return false;
     }
     
@@ -327,11 +284,15 @@ public class Parser {
      * @return
      */
     private boolean f_number() {    	
-    	if (this.currentToken.id == TokenID.NUMBER) {
+    	if (this.currentToken.ID == TokenID.NUMBER) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected a number. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -347,10 +308,14 @@ public class Parser {
      * @return
      */
     private boolean f_EndOfExpression() {
-    	if (this.currentToken.id == TokenID.END_OF_EXPRESSION) {
+    	if (this.currentToken.ID == TokenID.END_OF_EXPRESSION) {
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected the end of expression (#). Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -360,11 +325,15 @@ public class Parser {
      * @return
      */
     private boolean f_tPlus() {
-    	if (this.currentToken.id == TokenID.PLUS) {
+    	if (this.currentToken.ID == TokenID.PLUS) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '+'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -374,11 +343,15 @@ public class Parser {
      * @return
      */
     private boolean f_tMinus() {
-    	if (this.currentToken.id == TokenID.MINUS) {
+    	if (this.currentToken.ID == TokenID.MINUS) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '-'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -388,11 +361,15 @@ public class Parser {
      * @return
      */
     private boolean f_tMultiply() {
-    	if (this.currentToken.id == TokenID.MULTIPLY) {
+    	if (this.currentToken.ID == TokenID.MULTIPLY) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '*'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -402,11 +379,15 @@ public class Parser {
      * @return
      */
     private boolean f_tDivide() {
-    	if (this.currentToken.id == TokenID.DIVIDE) {
+    	if (this.currentToken.ID == TokenID.DIVIDE) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '/'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -416,11 +397,15 @@ public class Parser {
      * @return
      */
     private boolean f_tModulo() {
-    	if (this.currentToken.id == TokenID.MODULO) {
+    	if (this.currentToken.ID == TokenID.MODULO) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '%'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -430,11 +415,15 @@ public class Parser {
      * @return
      */
     private boolean f_tPower() {
-    	if (this.currentToken.id == TokenID.POWER) {
+    	if (this.currentToken.ID == TokenID.POWER) {
     		this.currentToken = this.scanner.getToken();
    		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '^'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -444,11 +433,15 @@ public class Parser {
      * @return
      */
     private boolean f_tLeftParenthesis() {
-    	if (this.currentToken.id == TokenID.LEFT_PARENTHESIS) {
+    	if (this.currentToken.ID == TokenID.LEFT_PARENTHESIS) {
     		this.currentToken = this.scanner.getToken();
   		return true;
     	} else {
     		// Syntax error
+    		this.error = String.format(
+    				"Error while parsing '%s' at position %s: Expected '('. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
@@ -458,14 +451,25 @@ public class Parser {
      * @return
      */
     private boolean f_tRightParenthesis() {
-    	if (this.currentToken.id == TokenID.RIGHT_PARENTHESIS) {
+    	if (this.currentToken.ID == TokenID.RIGHT_PARENTHESIS) {
     		this.currentToken = this.scanner.getToken();
     		return true;
     	} else {
     		// Syntax error
+        	this.error = String.format(
+        			"Error while parsing '%s' at position %s: Expected ')'. Actual character is '%s'.", 
+        			this.expression, this.currentToken.POSITION, this.currentToken.VALUE
+        		);
     		return false;
     	}
     }
+
+	/**
+	 * @return
+	 */
+	public String getError() {
+		return this.error;
+	}
     
     
 }
